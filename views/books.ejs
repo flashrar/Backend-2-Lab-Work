@@ -1,0 +1,322 @@
+<!-- books.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Books</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Book List</a>
+    <!-- Add any navigation links if needed -->
+  </div>
+</nav>
+
+<div class="container mt-5">
+    <h2>Book List</h2>
+    <div class="row">
+      <div class="col-md-12">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Year</th>
+              <th>Author</th>
+              <th>Publisher</th>
+              <th>Status</th>
+              <th>Borrowed By</th>
+              <th>Action</th> <!-- Add a new column for actions -->
+            </tr>
+          </thead>
+          <tbody>
+            <% books.forEach((book, index) => { %>
+              <tr>
+                <td><%= index + 1 %></td> <!-- Display PostgreSQL's own ID counting -->
+                <td><%= book.name %></td>
+                <td><%= book.year %></td>
+                <td><%= book.author %></td>
+                <td><%= book.publisher %></td>
+                <td><%= book.status ? 'Borrowed' : 'Available' %></td>
+                <td><%= book.borrowed_by || 'N/A' %></td>
+                <td>
+                  <button class="btn btn-primary editButton" data-id="<%= book.id %>">Edit</button>
+                  <button class="btn btn-danger deleteButton" data-id="<%= book.id %>">Delete</button>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+<div class="container mt-3">
+    <div class="row">
+      <div class="col-md-6">
+        <h2>Add New Book</h2>
+        <form id="addBookForm">
+            <div class="row justify-content-left">
+                <div class="col-md-6">
+                  <table class="table">
+                    <tbody>
+                      <tr>
+                        <td><input type="text" class="form-control" name="name" id="bookName" placeholder="Name" required></td>
+                      </tr>
+                      <tr>
+                        <td><input type="number" class="form-control" name="year" placeholder="Year" required></td>
+                      </tr>
+                      <tr>
+                        <td><input type="text" class="form-control" name="author" placeholder="Author" required></td>
+                      </tr>
+                      <tr>
+                        <td><input type="text" class="form-control" name="publisher" placeholder="Publisher" required></td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="status" id="statusCheckbox">
+                            <label class="form-check-label" for="statusCheckbox">Borrowed</label>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr id="borrowedByRow" style="display: none;">
+                        <td><input type="text" class="form-control" name="borrowed_by" id="borrowedBy" placeholder="Borrowed By"></td>
+                      </tr>
+                      <tr>
+                        <td><button type="submit" class="btn btn-primary">Add</button></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+        </form>
+      </div>
+      <!-- Inside the "Edit Book" form -->
+    <div class="col-md-6">
+        <h2>Edit Book</h2>
+        <form id="editBookForm" data-id="">
+        <!-- Add a dropdown menu to select existing books -->
+        
+        <!-- Form fields for editing a book -->
+        <div class="row justify-content-right">
+            <div class="col-md-6">
+            <table class="table">
+                <tbody>
+                <tr>
+                    <td><input type="text" class="form-control" name="editName" id="editBookName" placeholder="Name" required></td>
+                </tr>
+                <tr>
+                    <td><input type="number" class="form-control" name="editYear" placeholder="Year" required></td>
+                </tr>
+                <tr>
+                    <td><input type="text" class="form-control" name="editAuthor" placeholder="Author" required></td>
+                </tr>
+                <tr>
+                    <td><input type="text" class="form-control" name="editPublisher" placeholder="Publisher" required></td>
+                </tr>
+                <tr>
+                    <td>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="editStatus" id="editStatusCheckbox">
+                        <label class="form-check-label" for="editStatusCheckbox">Borrowed</label>
+                    </div>
+                    </td>
+                </tr>
+                <tr id="editBorrowedByRow" style="display: none;"> <!-- Updated ID attribute -->
+                    <td><input type="text" class="form-control" name="editBorrowedBy" id="editBorrowedBy" placeholder="Borrowed By"></td>
+                </tr>
+                <tr>
+                    <td><button type="submit" class="btn btn-primary">Update</button></td>
+                </tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+        </form>
+    </div>
+  
+    </div>
+</div>
+  
+
+  
+  
+<script>
+    // JavaScript to handle form submission and button clicks
+    document.getElementById('addBookForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Get values from form fields
+        const name = document.getElementById('bookName').value;
+        const year = document.querySelector('input[name="year"]').value;
+        const author = document.querySelector('input[name="author"]').value;
+        const publisher = document.querySelector('input[name="publisher"]').value;
+        const status = document.querySelector('input[name="status"]').checked;
+        const borrowedBy = document.getElementById('borrowedBy').value;
+
+        // Validate name field
+        if (!name) {
+            document.getElementById('bookName').classList.add('is-invalid');
+            return;
+        }
+
+        // Construct payload
+        const payload = {
+            name: name,
+            year: year,
+            author: author,
+            publisher: publisher,
+            status: status,
+            borrowed_by: borrowedBy
+        };
+
+        try {
+            const response = await fetch('/books', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json' // Specify content type as JSON
+                },
+                body: JSON.stringify(payload) // Convert payload to JSON string
+            });
+            
+            if (response.ok) {
+                window.location.reload(); // Refresh page to show updated book list
+            } else {
+                console.error('Failed to add book');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+
+    // JavaScript to handle checkbox state change in "Add New Book" form
+    const statusCheckbox = document.getElementById('statusCheckbox');
+    const borrowedByRow = document.getElementById('borrowedByRow');
+
+    statusCheckbox.addEventListener('change', () => {
+      if (statusCheckbox.checked) {
+        borrowedByRow.style.display = 'table-row'; // Display the "Borrowed By" input field
+      } else {
+        borrowedByRow.style.display = 'none'; // Hide the "Borrowed By" input field
+      }
+    });
+
+    // JavaScript to handle button clicks
+    document.querySelectorAll('.deleteButton').forEach(button => {
+        button.addEventListener('click', async () => {
+            const bookId = button.getAttribute('data-id');
+            try {
+                const response = await fetch(`/books/${bookId}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    window.location.reload(); // Refresh page to show updated book list
+                } else {
+                    console.error('Failed to delete book');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    });
+
+    document.querySelectorAll('.editButton').forEach(button => {
+      button.addEventListener('click', async () => {
+        const bookId = button.getAttribute('data-id');
+        try {
+          // Fetch the book details by ID
+          const response = await fetch(`/books/${bookId}`);
+          if (response.ok) {
+            const bookData = await response.json();
+            // Populate the form with book details for editing
+            document.getElementById('editBookForm').setAttribute('data-id', bookId);
+            document.getElementById('editBookName').value = bookData.name;
+            document.querySelector('input[name="editYear"]').value = bookData.year;
+            document.querySelector('input[name="editAuthor"]').value = bookData.author;
+            document.querySelector('input[name="editPublisher"]').value = bookData.publisher;
+            document.querySelector('input[name="editStatus"]').checked = bookData.status;
+
+            const editBorrowedByRow = document.getElementById('editBorrowedByRow');
+            if (bookData.status) {
+              editBorrowedByRow.style.display = 'table-row'; // Display the "Borrowed By" input field
+              document.getElementById('editBorrowedBy').value = bookData.borrowed_by || '';
+            } else {
+              editBorrowedByRow.style.display = 'none'; // Hide the "Borrowed By" input field
+              document.getElementById('editBorrowedBy').value = ''; // Clear the "Borrowed By" input field value
+            }
+          } else {
+            console.error('Failed to fetch book details');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      });
+    });
+
+    // JavaScript to handle checkbox state change in "Edit Book" form
+    const editStatusCheckbox = document.getElementById('editStatusCheckbox');
+    const editBorrowedByRow = document.getElementById('editBorrowedByRow');
+
+    editStatusCheckbox.addEventListener('change', () => {
+      if (editStatusCheckbox.checked) {
+        editBorrowedByRow.style.display = 'table-row'; // Display the "Borrowed By" input field
+      } else {
+        editBorrowedByRow.style.display = 'none'; // Hide the "Borrowed By" input field
+      }
+    });
+
+    document.getElementById('editBookForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const bookId = document.getElementById('editBookForm').getAttribute('data-id');
+      const name = document.getElementById('editBookName').value;
+      const year = document.querySelector('input[name="editYear"]').value;
+      const author = document.querySelector('input[name="editAuthor"]').value;
+      const publisher = document.querySelector('input[name="editPublisher"]').value;
+      const status = document.querySelector('input[name="editStatus"]').checked;
+      const borrowedBy = document.getElementById('editBorrowedBy').value;
+
+      const payload = {
+        name: name,
+        year: year,
+        author: author,
+        publisher: publisher,
+        status: status,
+        borrowed_by: borrowedBy
+      };
+
+      try {
+        const response = await fetch(`/books/${bookId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          window.location.reload(); // Refresh page to show updated book list
+        } else {
+          console.error('Failed to update book');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    });
+
+</script>
+  
+
+<!-- Bootstrap JS and Popper.js -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-mQ93GR66B00ZXjt0YO5KlohRA5SY2XofN4zfuZxLkoj1gXtFZl+8EZ5pSNhZJybp" crossorigin="anonymous"></script>
+
+</body>
+</html>
